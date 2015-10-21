@@ -129,13 +129,13 @@ function initEnvironment() {
 		Object.defineProperties(Function.prototype,{
 			"$asyncbind":{
 				value:$asyncbind,
-				writeable:true,
+				writable:true,
 				enumerable:false,
 				configurable:true
 			},
 			"$asyncspawn":{
 				value:$asyncspawn,
-				writeable:true,
+				writable:true,
 				enumerable:false,
 				configurable:true
 			},
@@ -317,7 +317,7 @@ function $asyncbind(self,catcher) {
 	if (catcher) {
 		if ($asyncbind.wrapAsyncStack)
 			catcher = $asyncbind.wrapAsyncStack(catcher) ;
-		function thenable(result,error){
+		var thenable = function thenable(result,error){
 			try {
 				return (result instanceof Object) && ('then' in result) && typeof result.then==="function"
 					? result.then(thenable,catcher) : resolver.call(self,result,error||catcher);
@@ -578,12 +578,12 @@ function initialize(initOpts){
 				value:function(promiseProvider,filter,suffix){
 					return asyncify(promiseProvider)(this,filter,suffix)
 				},
-				writeable:true,
+				writable:true,
 				configurable:true
 			},
 			"isThenable":{
 				value:isThenable,
-				writeable:true,
+				writable:true,
 				configurable:true
 			}
 		}) ;
