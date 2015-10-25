@@ -53,29 +53,34 @@ try {
 }
 
 for (idx=3; idx < process.argv.length; idx++) {
-	if (process.argv[idx]=='--generators' || process.argv[idx]=='--genonly') {
+	var arg = process.argv[idx] ;
+	if (arg=='--syntaxonly')
+		return require('./test-syntax') ;
+	if (arg=='--syntax') {
+		require('./test-syntax') ;
+	} else if (arg=='--generators' || arg=='--genonly') {
 		try {
+			useGenOnly = arg=='--genonly' ;
 			eval("var temp = new Promise(function(){}) ; function* x(){ return }") ;
+			useGenerators = true ;
+			if (useGenOnly)
+				providers.splice(1,1) ;
 		} catch (ex) {
-			ex = new Error("*** Installed platform does not support Promises or Generators") ;
-			ex.stack = "" ;
-			throw ex ;
+			console.warn("OOPS! Installed platform does not support Promises or Generators - skipping some tests") ;
+			if (useGenOnly)
+				process.exit(-1);
 		}
-		useGenerators = true ;
-		useGenOnly = process.argv[idx]=='--genonly' ;
-		if (useGenOnly)
-			providers.splice(1,1) ;
-	} else if (process.argv[idx]=='--out') {
+	} else if (arg=='--out') {
 		showOutput = true ;
 		providers = [{name:'nodent.Thenable',p:nodent.Thenable}] ;
-	} else if (process.argv[idx]=='--es7') {
+	} else if (arg=='--es7') {
 		showOutput = true ;
 		providers = [{name:'nodent-es7',p:null}] ;
-	} else if (process.argv[idx]=='--save') {
+	} else if (arg=='--save') {
 		saveOutput = true ;
-	} else if (process.argv[idx]=='--quiet') {
+	} else if (arg=='--quiet') {
 		quiet = true ;
-	} else if (process.argv[idx]=='--quick') {
+	} else if (arg=='--quick') {
 		targetSamples = 1 ;
 	} else {
 		break ;
@@ -105,7 +110,7 @@ async function run(fn) {
 
 var tests = process.argv.length>idx ? 
 	process.argv.slice(idx):
-		fs.readdirSync('./tests').map(function(fn){ return './tests/'+fn}) ;
+		fs.readdirSync('./tests/semantics').map(function(fn){ return './tests/semantics/'+fn}) ;
 
 async function runTests() {
 	for (var j=0; j<tests.length; j++) {
@@ -121,7 +126,7 @@ async function runTests() {
 		var failed = false ;
 		msgs = [] ;
 		for (var g=(useGenOnly?1:0);g<(useGenerators?2:1);g++) {
-			var info = [pad(test)] ;
+			var info = [pad(test.split('/').pop())] ;
 			if (g>0 && targetSamples!=1)
 				info.push("(using generators)") ;
 			for (var i=0; i<providers.length; i++) {
